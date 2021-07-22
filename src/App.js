@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 import "./App.css";
 
@@ -12,8 +12,17 @@ function App() {
   const [isPaused, setIsPaused] = useState(false);
 
   let progress = 0;
-  
-  let requestList = [];
+
+  let xmlRequest = [];
+
+  useEffect(() => {
+    console.log(progress);
+  })
+
+  useEffect(() => {
+    
+    console.log(isPaused);
+  }, [isPaused]);
 
   const onUploadProgress = (event) => {
     console.log(`${event.loaded} / ${event.total}`);
@@ -22,19 +31,15 @@ function App() {
   // Create a single file chunk of uniform size
   const createFixedFileChunk = (file, chunkStart, chunkSize) => {
     const fileChunk = file.slice(chunkStart, chunkStart + chunkSize);
-    progress += chunkSize;
 
     return fileChunk;
   };
 
-
   // Implement partial chunk request (When the file size is not a multiple of chunk size)
   const createPartialFileChunk = (file, chunkStart) => {
-      const fileChunk = file.slice(progress, chunkStart, file.size);
-      progress = file.size;
-      return fileChunk;
-  }
-
+    const fileChunk = file.slice(progress, chunkStart, file.size);
+    return fileChunk;
+  };
 
   // Create a custom request
   const createCustomRequest = (blob: Blob) => {
@@ -46,17 +51,15 @@ function App() {
       method: "POST",
       body: formData,
       onUploadProgress,
-      requestList,
+      xmlRequest,
     };
     return customRequest;
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    // Array of blobs
+
     const file = inputRef.current.files[0];
-    // createFileChunks(file);
-    // await uploadFile();
 
     const CHUNK_SIZE = 10 * 1024;
 
@@ -67,27 +70,45 @@ function App() {
         const response = await customFetch(customRequest);
         const message = (await response.json()).message;
         console.log(`${message} ${progress} - ${progress + CHUNK_SIZE}`);
+        progress += CHUNK_SIZE;
       } catch (err) {
         console.log(err);
       }
     }
+
+    if(progress === file.size) {
+      return ;
+    }
+
+    if (progress !== file.size) {
+      const partialFileChunk = createPartialFileChunk(file, progress);
+      const customRequest = createCustomRequest(partialFileChunk);
+      try {
+        const response = await customFetch(customRequest);
+        const message = (await response.json()).message;
+        console.log(`${message} ${progress} - ${file.size}`);
+        progress = file.size;
+      } catch (err) {
+        console.log(err);
+      }
+    }
+
+    console.log(progress === file.size);
+    // reset the progress
+    progress  = 0;
+
   };
 
   const handlePause = (event) => {
     event.preventDefault();
-    requestList.forEach((xhr) => {
-      xhr?.abort();
-    });
+    setIsPaused(isPaused);
   };
 
   const handleCancel = (event) => {
     event.preventDefault();
-    requestList.forEach((xhr) => {
-      xhr?.abort();
-    });
 
     // reset the request list
-    requestList = [];
+    xmlRequest = [];
 
     // reset progress
     progress = 0;
