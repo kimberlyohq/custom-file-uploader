@@ -20,17 +20,19 @@ function App() {
   };
 
   // Create a single file chunk of uniform size
-  const createFixedFileChunk = (file, chunkStart, step) => {
-    const fileChunk = file.slice(chunkStart, chunkStart + step);
-    progress += step;
+  const createFixedFileChunk = (file, chunkStart, chunkSize) => {
+    const fileChunk = file.slice(chunkStart, chunkStart + chunkSize);
+    progress += chunkSize;
 
     return fileChunk;
   };
 
 
-  // TODO: Implement partial chunk request (remaining file chunk to end of file chunk)
-  const createPartialFileChunk = (file) => {
-
+  // Implement partial chunk request (When the file size is not a multiple of chunk size)
+  const createPartialFileChunk = (file, chunkStart) => {
+      const fileChunk = file.slice(progress, chunkStart, file.size);
+      progress = file.size;
+      return fileChunk;
   }
 
 
@@ -56,15 +58,15 @@ function App() {
     // createFileChunks(file);
     // await uploadFile();
 
-    const STEP = 10 * 1024;
+    const CHUNK_SIZE = 10 * 1024;
 
-    while (progress + STEP < file.size) {
-      const fileChunk = createFixedFileChunk(file, progress, STEP);
+    while (progress + CHUNK_SIZE < file.size) {
+      const fileChunk = createFixedFileChunk(file, progress, CHUNK_SIZE);
       const customRequest = createCustomRequest(fileChunk);
       try {
         const response = await customFetch(customRequest);
         const message = (await response.json()).message;
-        console.log(`${message} ${progress} - ${progress + STEP}`);
+        console.log(`${message} ${progress} - ${progress + CHUNK_SIZE}`);
       } catch (err) {
         console.log(err);
       }
