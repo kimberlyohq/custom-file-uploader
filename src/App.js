@@ -10,9 +10,10 @@ function App() {
 
   // set initial value to 0
   const progress = useRef(0);
-  const xmlRequest = useRef([]);
+  const xmlRequest = useRef();
 
   const [isPaused, setIsPaused] = useState(false);
+
 
   const onUploadProgress = (event) => {
     console.log(`${event.loaded} / ${event.total}`);
@@ -38,7 +39,7 @@ function App() {
       method: "POST",
       body: formData,
       onUploadProgress,
-      xmlRequest: xmlRequest.current,
+      xmlRequest,
     };
     return customRequest;
   };
@@ -110,12 +111,12 @@ function App() {
   const handlePause = (event) => {
     event.preventDefault();
     setIsPaused(true);
-    xmlRequest.current.find((xhr) => xhr.abort());
+    xmlRequest.current?.abort();
   };
 
   const handleCancel = (event) => {
     event.preventDefault();
-    xmlRequest.current.find((xhr) => xhr.abort());
+    xmlRequest.current?.abort();
 
     // reset the request list
     xmlRequest.current = [];

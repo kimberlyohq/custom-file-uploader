@@ -9,7 +9,7 @@ type CustomRequest = {
   +onTimeout?: () => any,
   +onProgress?: (event: ProgressEvent) => any,
   +onUploadProgress?: (event: ProgressEvent) => any,
-  xmlRequest?: Array<XMLHttpRequest>,
+  xmlRequest?: any,
 };
 
 /**
@@ -37,7 +37,7 @@ export const customFetch = (request: CustomRequest): Promise<Response> => {
     const xhr = new XMLHttpRequest();
 
     if (xmlRequest) {
-      xmlRequest.push(xhr);
+      xmlRequest.current = xhr;
     }
 
     if (onProgress) {
@@ -78,12 +78,10 @@ export const customFetch = (request: CustomRequest): Promise<Response> => {
 
         const response = new Response(body, init);
         resolve(response);
-        
+
         if (xmlRequest) {
-          const index = xmlRequest.indexOf(xhr);
-          xmlRequest.splice(index, 1);
+          xmlRequest.current = undefined;
         }
-      
       }
     };
 
