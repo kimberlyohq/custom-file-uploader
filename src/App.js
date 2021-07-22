@@ -109,7 +109,6 @@ function App() {
 
   const handlePause = (event) => {
     event.preventDefault();
-    console.log("PAUSED");
     setIsPaused(true);
     xmlRequest.current.find((xhr) => xhr.abort());
   };
@@ -127,7 +126,6 @@ function App() {
 
   const handleResume = (event) => {
     event.preventDefault();
-    console.log("RESUMED");
     setIsPaused(false);
     handleUpload();
   };
