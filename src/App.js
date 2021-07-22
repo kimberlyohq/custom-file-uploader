@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 import "./App.css";
 
@@ -7,17 +7,12 @@ import { customFetch } from "./customFetch";
 const URL = "http://localhost:8000/files";
 
 function App() {
-  const [file, setFile] = useState();
+  const inputRef = useRef();
+
   const [isPaused, setIsPaused] = useState(false);
 
   let fileChunks = [];
   let requestList = [];
-
-  const handleFileUpload = (event) => {
-    // array of files
-    const files = event.target.files;
-    setFile(files[0]);
-  };
 
   const onUploadProgress = (event) => {
     console.log(`${event.loaded} / ${event.total}`);
@@ -72,6 +67,7 @@ function App() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     // Array of blobs
+    const file = inputRef.current.files[0];
     createFileChunks(file);
     await uploadFile();
   };
@@ -93,7 +89,6 @@ function App() {
     // reset the request list
     requestList = [];
     fileChunks = [];
-    setFile(undefined);
   };
 
   const handleResume = (event) => {
@@ -105,7 +100,7 @@ function App() {
   return (
     <div className="App">
       <form>
-        <input type="file" className="input" onChange={handleFileUpload} />
+        <input ref={inputRef} type="file" className="input"  />
         <button type="submit" className="button" onClick={handleSubmit}>
           Upload
         </button>
