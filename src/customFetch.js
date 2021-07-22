@@ -9,6 +9,7 @@ type CustomRequest = {
   +onTimeout?: () => any,
   +onProgress?: (event: ProgressEvent) => any,
   +onUploadProgress?: (event: ProgressEvent) => any,
+  requestList?: XMLHttpRequest[],
 };
 
 /**
@@ -30,9 +31,14 @@ export const customFetch = (request: CustomRequest): Promise<Response> => {
       onTimeout = defaultTimeoutHandler,
       onProgress,
       onUploadProgress,
+      requestList,
     } = request;
 
     const xhr = new XMLHttpRequest();
+
+    if (requestList) {
+      requestList.push(xhr);
+    }
 
     if (onProgress) {
       xhr.onprogress = onProgress;
@@ -64,12 +70,15 @@ export const customFetch = (request: CustomRequest): Promise<Response> => {
         const init = {};
         init.status = xhr.status;
         init.statusText = xhr.statusText;
-     
         // Create a response with the body
         const body = xhr.response;
 
         const response = new Response(body, init);
         resolve(response);
+        if (requestList) {
+          const index = requestList.indexOf(xhr);
+          requestList.splice(index, 1);
+        }
       }
     };
 

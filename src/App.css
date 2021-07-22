@@ -1,6 +1,13 @@
 .App {
   text-align: center;
   margin-top: 50px;
-  display: flex;
-  flex-direction: column;
+}
+
+.button {
+  margin-left: 10px;
+  padding: 10px;
+}
+
+.input {
+  padding: 10px;
 }

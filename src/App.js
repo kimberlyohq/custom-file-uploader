@@ -8,6 +8,7 @@ const URL = "http://localhost:8000/files";
 
 function App() {
   const [file, setFile] = useState();
+  let requestList = [];
 
   const handleFileUpload = (event) => {
     // array of files
@@ -30,17 +31,18 @@ function App() {
         method: "POST",
         body: formData,
         onUploadProgress,
+        requestList,
       };
       return customRequest;
     });
 
-    // Upload all file chunks to the server 
+    // Upload all file chunks to the server
     try {
       customRequests.map(async (request, index) => {
         const response = await customFetch(request);
         const responseJSON = await response.json();
         console.log(`${responseJSON.message} ${index}`);
-      })
+      });
     } catch (err) {
       console.log(err);
     }
@@ -70,17 +72,29 @@ function App() {
     event.preventDefault();
     // Array of blobs
     const fileChunkList = createFileChunks(file);
-    console.log(fileChunkList);
+
     uploadFile(fileChunkList);
+  };
+
+  const handlePause = (event) => {
+    event.preventDefault();
+    requestList.forEach((xhr) => {
+      xhr.onreadystatechange = null;
+      xhr?.abort();
+    });
   };
 
   return (
     <div className="App">
       <form>
-        <input type="file" onChange={handleFileUpload} />
-        <button type="submit" onClick={handleSubmit}>
+        <input type="file" className="input" onChange={handleFileUpload} />
+        <button type="submit" className="button" onClick={handleSubmit}>
           Upload
         </button>
+        <button className="button" onClick={handlePause}>
+          Pause
+        </button>
+        <button className="button">Cancel</button>
       </form>
     </div>
   );
