@@ -19,15 +19,9 @@ function App() {
   };
 
   // Create a single file chunk of uniform size
-  const createFixedFileChunk = (file, chunkStart, chunkSize) => {
-    const fileChunk = file.slice(chunkStart, chunkStart + chunkSize);
+  const createFileChunk = (file, chunkStart, chunkEnd) => {
+    const fileChunk = file.slice(chunkStart, chunkEnd);
 
-    return fileChunk;
-  };
-
-  // Implement partial chunk request (When the file size is not a multiple of chunk size)
-  const createPartialFileChunk = (file, chunkStart) => {
-    const fileChunk = file.slice(progress.current, chunkStart, file.size);
     return fileChunk;
   };
 
@@ -62,10 +56,10 @@ function App() {
     console.log(`START ${progress.current}`);
 
     while (progress.current + CHUNK_SIZE < file.size) {
-      const fileChunk = createFixedFileChunk(
+      const fileChunk = createFileChunk(
         file,
         progress.current,
-        CHUNK_SIZE
+        progress.current + CHUNK_SIZE
       );
       const customRequest = createCustomRequest(fileChunk);
       try {
@@ -87,7 +81,7 @@ function App() {
 
     // When the file size is not a multiple of chunk size
     if (progress.current !== file.size) {
-      const partialFileChunk = createPartialFileChunk(file, progress.current);
+      const partialFileChunk = createFileChunk(file, progress.current, file.size);
       const customRequest = createCustomRequest(partialFileChunk);
       try {
         const response = await customFetch(customRequest);
