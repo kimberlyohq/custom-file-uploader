@@ -9,7 +9,7 @@ type CustomRequest = {
   +onTimeout?: () => any,
   +onProgress?: (event: ProgressEvent) => any,
   +onUploadProgress?: (event: ProgressEvent) => any,
-  requestList?: XMLHttpRequest[],
+  xmlRequest?: Array<XMLHttpRequest>,
 };
 
 /**
@@ -31,13 +31,13 @@ export const customFetch = (request: CustomRequest): Promise<Response> => {
       onTimeout = defaultTimeoutHandler,
       onProgress,
       onUploadProgress,
-      requestList,
+      xmlRequest,
     } = request;
 
     const xhr = new XMLHttpRequest();
 
-    if (requestList) {
-      requestList.push(xhr);
+    if (xmlRequest) {
+      xmlRequest.push(xhr);
     }
 
     if (onProgress) {
@@ -66,7 +66,7 @@ export const customFetch = (request: CustomRequest): Promise<Response> => {
         return;
       } else if (xhr.readyState === XMLHttpRequest.DONE) {
         // fetch operation is complete
-     
+
         // status.ok when status code between 200 - 299
 
         // Update the properties of the response object
@@ -78,10 +78,12 @@ export const customFetch = (request: CustomRequest): Promise<Response> => {
 
         const response = new Response(body, init);
         resolve(response);
-        if (requestList) {
-          const index = requestList.indexOf(xhr);
-          requestList.splice(index, 1);
+        
+        if (xmlRequest) {
+          const index = xmlRequest.indexOf(xhr);
+          xmlRequest.splice(index, 1);
         }
+      
       }
     };
 
