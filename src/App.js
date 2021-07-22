@@ -10,19 +10,37 @@ function App() {
   const [file, setFile] = useState();
 
   const handleFileUpload = (event) => {
+    // array of files
     const files = event.target.files;
     setFile(files[0]);
   };
 
-  const uploadFile = async () => {
-    const customRequest = {
-      url: `${URL}/upload`,
-      method: "POST",
-    };
+  const onUploadProgress = (event) => {
+    console.log(`${event.loaded} / ${event.total}`);
+  };
 
+  const uploadFile = async (fileChunks: Blob[]) => {
+    // Map each file chunk to a customRequest object
+    const customRequests = fileChunks.map((fileChunk, index) => {
+      const formData = new FormData();
+      formData.append(`Blob ${index}`, fileChunks[index]);
+
+      const customRequest = {
+        url: `${URL}/upload`,
+        method: "POST",
+        body: formData,
+        onUploadProgress,
+      };
+      return customRequest;
+    });
+
+    // Upload all file chunks to the server 
     try {
-      const response = await customFetch(customRequest);
-      console.log(await response.json());
+      customRequests.map(async (request, index) => {
+        const response = await customFetch(request);
+        const responseJSON = await response.json();
+        console.log(`${responseJSON.message} ${index}`);
+      })
     } catch (err) {
       console.log(err);
     }
@@ -43,15 +61,17 @@ function App() {
       fileChunkList.push({ file: fileChunk });
     }
 
-    fileChunkList.push({file: file.slice(current, fileSize)});
-  
+    fileChunkList.push({ file: file.slice(current, fileSize) });
+
     return fileChunkList;
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    // Array of blobs
     const fileChunkList = createFileChunks(file);
-    uploadFile();
+    console.log(fileChunkList);
+    uploadFile(fileChunkList);
   };
 
   return (
