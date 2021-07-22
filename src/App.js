@@ -76,6 +76,7 @@ function App() {
 
     if (progress.current === file.size) {
       console.log("COMPLETED");
+      // reset the progress
       progress.current = 0;
       return;
     }
@@ -96,10 +97,9 @@ function App() {
 
     if (progress.current === file.size) {
       console.log("COMPLETED");
+      // reset the progress
+      progress.current = 0;
     }
-
-    // reset the progress
-    progress.current = 0;
   };
 
   const handleSubmit = async (event) => {
