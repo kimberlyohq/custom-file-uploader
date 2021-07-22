@@ -116,6 +116,7 @@ function App() {
 
   const handleCancel = (event) => {
     event.preventDefault();
+    setIsPaused(false);
     xmlRequest.current?.abort();
 
     // reset the request list
