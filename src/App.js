@@ -76,6 +76,7 @@ function App() {
 
     if (progress.current === file.size) {
       console.log("COMPLETED");
+      progress.current = 0;
       return;
     }
 
