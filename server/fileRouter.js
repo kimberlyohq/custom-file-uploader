@@ -8,7 +8,16 @@ router.get("/", (req, res) => {
 });
 
 router.post("/upload", (req, res) => {
-  res.status(200).send({message: "SUCCESSFULLY CONNECTED TO POST ROUTE"});
+  let data = "";
+  req.on("data", (chunk) => {
+    console.log(chunk);
+    data += chunk;
+  });
+  req.on("end", () => {
+    
+    res.status(200).send({ message: "Upload completed" });
+  });
+
 });
 
 module.exports = router;
