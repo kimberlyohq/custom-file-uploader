@@ -11,70 +11,68 @@ function App() {
 
   const [isPaused, setIsPaused] = useState(false);
 
-  let fileChunks = [];
+  let progress = 0;
+  
   let requestList = [];
 
   const onUploadProgress = (event) => {
     console.log(`${event.loaded} / ${event.total}`);
   };
 
-  const uploadFile = async () => {
-    // Map each file chunk to a customRequest object
-    const customRequests = fileChunks.map((fileChunk, index) => {
-      const formData = new FormData();
-      formData.append(`Blob ${index}`, fileChunks[index]);
+  // Create a single file chunk of uniform size
+  const createFixedFileChunk = (file, chunkStart, step) => {
+    const fileChunk = file.slice(chunkStart, chunkStart + step);
+    progress += step;
 
-      const customRequest = {
-        url: `${URL}/upload`,
-        method: "POST",
-        body: formData,
-        onUploadProgress,
-        requestList,
-      };
-      return customRequest;
-    });
-
-    // Upload all file chunks to the server
-    try {
-      customRequests.map(async (request, index) => {
-        const response = await customFetch(request);
-        const responseJSON = await response.json();
-        console.log(`${responseJSON.message} ${index}`);
-        fileChunks.splice(index, 1);
-      });
-    } catch (err) {
-      console.log(err);
-    }
+    return fileChunk;
   };
 
-  // Break the file into fixed size Blobs
-  const createFileChunks = (file: File) => {
-    const fileSize = file.size;
 
-    let current = 0;
-    const STEP = 10 * 1024;
+  // TODO: Implement partial chunk request (remaining file chunk to end of file chunk)
+  const createPartialFileChunk = (file) => {
 
-    while (current < fileSize) {
-      //var newBlob = blob.slice(start, end, contentType);
-      const fileChunk = file.slice(current, current + STEP);
-      current += STEP;
-      fileChunks.push({ file: fileChunk });
-    }
+  }
 
-    fileChunks.push({ file: file.slice(current, fileSize) });
+
+  // Create a custom request
+  const createCustomRequest = (blob: Blob) => {
+    const formData = new FormData();
+    formData.append(`Blob ${progress} ${progress + blob.size}`, blob);
+
+    const customRequest = {
+      url: `${URL}/upload`,
+      method: "POST",
+      body: formData,
+      onUploadProgress,
+      requestList,
+    };
+    return customRequest;
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     // Array of blobs
     const file = inputRef.current.files[0];
-    createFileChunks(file);
-    await uploadFile();
+    // createFileChunks(file);
+    // await uploadFile();
+
+    const STEP = 10 * 1024;
+
+    while (progress + STEP < file.size) {
+      const fileChunk = createFixedFileChunk(file, progress, STEP);
+      const customRequest = createCustomRequest(fileChunk);
+      try {
+        const response = await customFetch(customRequest);
+        const message = (await response.json()).message;
+        console.log(`${message} ${progress} - ${progress + STEP}`);
+      } catch (err) {
+        console.log(err);
+      }
+    }
   };
 
   const handlePause = (event) => {
     event.preventDefault();
-    setIsPaused(true);
     requestList.forEach((xhr) => {
       xhr?.abort();
     });
@@ -88,19 +86,20 @@ function App() {
 
     // reset the request list
     requestList = [];
-    fileChunks = [];
+
+    // reset progress
+    progress = 0;
   };
 
   const handleResume = (event) => {
     event.preventDefault();
     setIsPaused(false);
-    uploadFile();
   };
 
   return (
     <div className="App">
       <form>
-        <input ref={inputRef} type="file" className="input"  />
+        <input ref={inputRef} type="file" className="input" />
         <button type="submit" className="button" onClick={handleSubmit}>
           Upload
         </button>
