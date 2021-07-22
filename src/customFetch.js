@@ -61,9 +61,12 @@ export const customFetch = (request: CustomRequest): Promise<Response> => {
      * When the fetch operation is complete, return a Response object
      */
     xhr.onreadystatechange = () => {
-      // fetch operation is complete
-      // XMLHttpRequest.DONE == 4
-      if (xhr.readyState === XMLHttpRequest.DONE) {
+      // Request is aborted
+      if (xhr.status === 0 && xhr.status === XMLHttpRequest.UNSENT) {
+        return;
+      } else if (xhr.readyState === XMLHttpRequest.DONE) {
+        // fetch operation is complete
+     
         // status.ok when status code between 200 - 299
 
         // Update the properties of the response object
