@@ -1,23 +1,35 @@
-import logo from './logo.svg';
-import './App.css';
+import { useState } from "react";
+
+import "./App.css";
+
+import { customFetch } from "./customFetch";
+
+const URL = "http://localhost:8000/files";
 
 function App() {
+  const [file, setFile] = useState();
+
+  const handleFileUpload = (event) => {
+    const files = event.target.files;
+    setFile(files[0]);
+  }
+
+  const handleSubmit = () => {
+
+  }
+
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <form>
+        <input
+          type="file"
+          onChange={handleFileUpload}
+        />
+        <button type="submit" onClick={handleSubmit}>
+          Upload
+        </button>
+      </form>
     </div>
   );
 }
