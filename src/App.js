@@ -84,6 +84,17 @@ function App() {
     });
   };
 
+  const handleCancel = (event) => {
+    event.preventDefault();
+    requestList.forEach((xhr) => {
+      xhr.onreadystatechange = null;
+      xhr?.abort();
+    });
+
+    // reset the request list 
+    requestList = [];
+  };
+
   return (
     <div className="App">
       <form>
@@ -94,7 +105,7 @@ function App() {
         <button className="button" onClick={handlePause}>
           Pause
         </button>
-        <button className="button">Cancel</button>
+        <button className="button" onClick={handleCancel}>Cancel</button>
       </form>
     </div>
   );
