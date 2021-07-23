@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useMemo } from "react";
 
 import "./App.css";
 import { customFetch } from "./customFetch";
@@ -18,9 +18,6 @@ function App() {
 
   // current chunk index
   const [chunkIndex, setChunkIndex] = useState(0);
-
-  // Trigger re-render the component when progress changes
-  useEffect(() => {}, [uploadProgress]);
 
   const onUploadProgress = (event) => {
     setUploadProgress(
