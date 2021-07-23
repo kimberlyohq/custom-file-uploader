@@ -19,8 +19,22 @@ function App() {
   // current chunk index
   const [chunkIndex, setChunkIndex] = useState(0);
 
-  // Trigger re-render the component when progress changes
-  useEffect(() => {}, [uploadProgress]);
+  const [totalChunks, setTotalChunks] = useState(0);
+
+  // Trigger re-render the component when chunkIndex changes
+  useEffect(() => {
+    if (totalChunks === 0 || isPaused) {
+      return;
+    }
+
+    if (chunkIndex === totalChunks) {
+      console.log("COMPLETED");
+      reset();
+    } else {
+      console.log(chunkIndex);
+      handleUpload(chunkIndex + 1);
+    }
+  }, [uploadProgress, chunkIndex]);
 
   const onUploadProgress = (event) => {
     setUploadProgress((event.loaded / event.total) * 100);
@@ -78,29 +92,19 @@ function App() {
   const handleUpload = async (chunkIndex) => {
     const file = inputRef.current.files[0];
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-
-    let nextChunk;
+    setTotalChunks(totalChunks);
 
     try {
-      const response = await uploadChunk(chunkIndex);
-
-      nextChunk = response.chunkIndex + 1;
-      console.log(nextChunk);
+      await uploadChunk(chunkIndex);
     } catch (err) {
       console.log(err);
-    }
-
-    if (nextChunk === totalChunks) {
-      console.log("COMPLETED");
-      reset();
-    } else {
-      handleUpload(nextChunk);
     }
   };
 
   const reset = () => {
     setChunkIndex(0);
     setUploadProgress(0);
+    setTotalChunks(0);
   };
 
   const handleSubmit = async (event) => {
@@ -111,6 +115,7 @@ function App() {
   const handlePause = (event) => {
     event.preventDefault();
     setIsPaused(true);
+    setChunkIndex((chunkIndex) => chunkIndex - 1);
     xmlRequest.current?.abort();
   };
 
