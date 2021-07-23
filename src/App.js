@@ -76,6 +76,10 @@ function App() {
 
   // Recursive
   const handleUpload = async (chunkIndex) => {
+    if (isPaused) {
+      return;
+    }
+
     const file = inputRef.current.files[0];
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
