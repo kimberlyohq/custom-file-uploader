@@ -6,8 +6,6 @@ import { customFetch } from "./customFetch";
 const URL = "http://localhost:8000/files";
 const CHUNK_SIZE = 10 * 1024;
 
-let myevent = 0;
-
 function App() {
   const inputRef = useRef();
 
@@ -22,7 +20,6 @@ function App() {
   const [chunkIndex, setChunkIndex] = useState(0);
 
   const onUploadProgress = (event) => {
-    myevent += event.loaded;
 
     setUploadProgress((uploadProgress) => uploadProgress + event.loaded);
   };
@@ -116,7 +113,6 @@ function App() {
 
     if (nextChunk === totalChunks) {
       console.log("COMPLETED");
-      console.log(myevent);
     }
   };
 
