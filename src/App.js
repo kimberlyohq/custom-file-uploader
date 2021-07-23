@@ -6,6 +6,8 @@ import { customFetch } from "./customFetch";
 const URL = "http://localhost:8000/files";
 const CHUNK_SIZE = 10 * 1024;
 
+let myevent = 0;
+
 function App() {
   const inputRef = useRef();
 
@@ -20,9 +22,9 @@ function App() {
   const [chunkIndex, setChunkIndex] = useState(0);
 
   const onUploadProgress = (event) => {
-    setUploadProgress(
-      (uploadProgress) => uploadProgress + event.loaded / event.total
-    );
+    myevent += event.loaded;
+
+    setUploadProgress((uploadProgress) => uploadProgress + event.loaded);
   };
 
   const calculateProgress = useMemo(() => {
@@ -31,19 +33,19 @@ function App() {
     }
 
     const fileSize = inputRef.current.files[0].size;
-    const totalChunks = Math.ceil(fileSize / CHUNK_SIZE);
-    return (chunkIndex / totalChunks) * 100;
-  }, [chunkIndex]);
+
+    return (uploadProgress / fileSize) * 100;
+  }, [uploadProgress]);
 
   // Create a single file chunk of uniform size
   const createFileChunk = (file, chunkStart, chunkEnd) => {
     const fileChunk = file.slice(chunkStart, chunkEnd);
-
+    console.log(fileChunk);
     return fileChunk;
   };
 
   // Create a custom request
-  const createCustomRequest = (blob: Blob) => {
+  const createCustomRequest = (blob: Blob, chunkStart, chunkEnd, fileSize) => {
     const formData = new FormData();
     formData.append(`Blob ${Math.random()}`, blob);
 
@@ -53,24 +55,35 @@ function App() {
       body: formData,
       onUploadProgress,
       xmlRequest,
+      headers: {
+        "Content-Range": `bytes ${chunkStart}-${chunkEnd}/${fileSize}`,
+      },
     };
     return customRequest;
   };
 
   const uploadChunk = async (chunkIndex) => {
     const file = inputRef.current.files[0];
-    const chunkStart = chunkIndex * CHUNK_SIZE;
+    let chunkStart = chunkIndex * CHUNK_SIZE;
+
     let chunkEnd;
 
-    if (chunkStart + CHUNK_SIZE < file.size) {
+    if (chunkStart + CHUNK_SIZE <= file.size) {
       chunkEnd = chunkStart + CHUNK_SIZE;
     } else {
       chunkEnd = file.size;
     }
 
+    console.log(`${chunkIndex} ${chunkStart} ${chunkEnd}`);
+
     const fileChunk = createFileChunk(file, chunkStart, chunkEnd);
 
-    const customRequest = createCustomRequest(fileChunk);
+    const customRequest = createCustomRequest(
+      fileChunk,
+      chunkStart,
+      chunkEnd,
+      file.size
+    );
 
     return new Promise((resolve, reject) => {
       customFetch(customRequest)
@@ -86,6 +99,7 @@ function App() {
   const handleUpload = async (chunkIndex) => {
     const file = inputRef.current.files[0];
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    console.log(file.size);
 
     let nextChunk = chunkIndex;
 
@@ -102,6 +116,7 @@ function App() {
 
     if (nextChunk === totalChunks) {
       console.log("COMPLETED");
+      console.log(myevent);
     }
   };
 

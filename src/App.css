@@ -24,4 +24,8 @@
 .progress-bar {
   height: 100%;
   background-color: blue;
+  -webkit-transition: width 1s ease;
+  -moz-transition: width 1s ease;
+  -o-transition: width 1s ease;
+  transition: width 1s ease;
 }
