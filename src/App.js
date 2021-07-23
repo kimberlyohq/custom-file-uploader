@@ -86,26 +86,25 @@ function App() {
     });
   };
 
-  // Recursive
   const handleUpload = async (chunkIndex) => {
     const file = inputRef.current.files[0];
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
-    let nextChunk;
+    let nextChunk = chunkIndex;
 
-    try {
-      const response = await uploadChunk(chunkIndex);
+    while (nextChunk < totalChunks) {
+      try {
+        const response = await uploadChunk(nextChunk);
 
-      nextChunk = response.chunkIndex + 1;
-      console.log(nextChunk);
-    } catch (err) {
-      console.log(err);
+        nextChunk = response.chunkIndex + 1;
+        console.log(nextChunk);
+      } catch (err) {
+        console.log(err);
+      }
     }
 
     if (nextChunk === totalChunks) {
       console.log("COMPLETED");
-    } else {
-      handleUpload(nextChunk);
     }
   };
 
