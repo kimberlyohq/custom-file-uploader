@@ -20,7 +20,7 @@ function App() {
   const [chunkIndex, setChunkIndex] = useState(0);
 
   // Trigger re-render the component when progress changes
-  useEffect(() => {}, [uploadProgress]);
+  useEffect(() => {}, [uploadProgress, chunkIndex]);
 
   const onUploadProgress = (event) => {
     setUploadProgress((event.loaded / event.total) * 100);
