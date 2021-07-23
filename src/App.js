@@ -1,9 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 import "./App.css";
 import { customFetch } from "./customFetch";
 
 const URL = "http://localhost:8000/files";
+const CHUNK_SIZE = 10 * 1024;
 
 function App() {
   const inputRef = useRef();
@@ -14,8 +15,18 @@ function App() {
 
   const [isPaused, setIsPaused] = useState(false);
 
+  // current chunk index
+  const [uploadProgress, setUploadProgress] = useState(0);
 
+  // Re-render the component when progress changes
+  useEffect(() => {
+    console.log(`Progress ${uploadProgress}`);
+  }, [uploadProgress]);
+
+
+  // TODO:
   const onUploadProgress = (event) => {
+    setUploadProgress((event.loaded / event.total) * 100);
     console.log(`${event.loaded} / ${event.total}`);
   };
 
@@ -44,64 +55,18 @@ function App() {
     return customRequest;
   };
 
+
   const handleUpload = async () => {
-    const file = inputRef.current.files[0];
-
-    if (!file || file.size === 0) {
-      alert("No file uploaded");
-      return;
+    const customRequest = createCustomRequest(inputRef.current.files[0]);
+    try {
+      const response = await customFetch(customRequest);
+      const successMsg = (await response.json()).message;
+      console.log(successMsg);
+    } catch (err) {
+      console.log(err);
     }
-
-    const CHUNK_SIZE = 10 * 1024;
-
-    console.log(`START ${progress.current}`);
-
-    while (progress.current + CHUNK_SIZE < file.size) {
-      const fileChunk = createFileChunk(
-        file,
-        progress.current,
-        progress.current + CHUNK_SIZE
-      );
-      const customRequest = createCustomRequest(fileChunk);
-      try {
-        const response = await customFetch(customRequest);
-        const message = (await response.json()).message;
-        console.log(
-          `${message} ${progress.current} - ${progress.current + CHUNK_SIZE}`
-        );
-        progress.current += CHUNK_SIZE;
-      } catch (err) {
-        console.log(err);
-      }
-    }
-
-    if (progress.current === file.size) {
-      console.log("COMPLETED");
-      // reset the progress
-      progress.current = 0;
-      return;
-    }
-
-    // When the file size is not a multiple of chunk size
-    if (progress.current !== file.size) {
-      const partialFileChunk = createFileChunk(file, progress.current, file.size);
-      const customRequest = createCustomRequest(partialFileChunk);
-      try {
-        const response = await customFetch(customRequest);
-        const message = (await response.json()).message;
-        console.log(`${message} ${progress.current} - ${file.size}`);
-        progress.current = file.size;
-      } catch (err) {
-        console.log(err);
-      }
-    }
-
-    if (progress.current === file.size) {
-      console.log("COMPLETED");
-      // reset the progress
-      progress.current = 0;
-    }
-  };
+    
+  }
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -120,10 +85,13 @@ function App() {
     xmlRequest.current?.abort();
 
     // reset the request list
-    xmlRequest.current = [];
+    xmlRequest.current = undefined;
 
     // reset progress
     progress.current = 0;
+
+    // reset the chunkCount 
+    setChunkIndex(0);
   };
 
   const handleResume = (event) => {
