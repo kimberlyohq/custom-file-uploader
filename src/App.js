@@ -9,25 +9,21 @@ const CHUNK_SIZE = 10 * 1024;
 function App() {
   const inputRef = useRef();
 
-  // set initial value to 0
-  const progress = useRef(0);
   const xmlRequest = useRef();
 
   const [isPaused, setIsPaused] = useState(false);
 
-  // current chunk index
+  // current upload progress of chunk
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Re-render the component when progress changes
-  useEffect(() => {
-    console.log(`Progress ${uploadProgress}`);
-  }, [uploadProgress]);
+  // current chunk index
+  const [chunkIndex, setChunkIndex] = useState(0);
 
+  // Trigger re-render the component when progress changes
+  useEffect(() => {}, [uploadProgress]);
 
-  // TODO:
   const onUploadProgress = (event) => {
     setUploadProgress((event.loaded / event.total) * 100);
-    console.log(`${event.loaded} / ${event.total}`);
   };
 
   // Create a single file chunk of uniform size
@@ -40,10 +36,7 @@ function App() {
   // Create a custom request
   const createCustomRequest = (blob: Blob) => {
     const formData = new FormData();
-    formData.append(
-      `Blob ${progress.current} ${progress.current + blob.size}`,
-      blob
-    );
+    formData.append(`Blob ${Math.random()}`, blob);
 
     const customRequest = {
       url: `${URL}/upload`,
@@ -55,22 +48,64 @@ function App() {
     return customRequest;
   };
 
+  const uploadChunk = async (chunkIndex) => {
+    const file = inputRef.current.files[0];
+    const chunkStart = chunkIndex * CHUNK_SIZE;
+    let chunkEnd;
 
-  const handleUpload = async () => {
-    const customRequest = createCustomRequest(inputRef.current.files[0]);
+    if (chunkStart + CHUNK_SIZE < file.size) {
+      chunkEnd = chunkStart + CHUNK_SIZE;
+    } else {
+      chunkEnd = file.size;
+    }
+
+    const fileChunk = createFileChunk(file, chunkStart, chunkEnd);
+
+    const customRequest = createCustomRequest(fileChunk);
+
+    return new Promise((resolve, reject) => {
+      customFetch(customRequest)
+        .then((response) => {
+          // Success --> update the chunk index
+          setChunkIndex((chunkIndex) => chunkIndex + 1);
+          resolve({ chunkIndex });
+        })
+        .catch((err) => reject(err));
+    });
+  };
+
+  // Recursive
+  const handleUpload = async (chunkIndex) => {
+    const file = inputRef.current.files[0];
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+
+    let nextChunk;
+
     try {
-      const response = await customFetch(customRequest);
-      const successMsg = (await response.json()).message;
-      console.log(successMsg);
+      const response = await uploadChunk(chunkIndex);
+
+      nextChunk = response.chunkIndex + 1;
+      console.log(nextChunk);
     } catch (err) {
       console.log(err);
     }
-    
-  }
+
+    if (nextChunk === totalChunks) {
+      console.log("COMPLETED");
+      reset();
+    } else {
+      handleUpload(nextChunk);
+    }
+  };
+
+  const reset = () => {
+    setChunkIndex(0);
+    setUploadProgress(0);
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    await handleUpload();
+    await handleUpload(chunkIndex);
   };
 
   const handlePause = (event) => {
@@ -87,17 +122,13 @@ function App() {
     // reset the request list
     xmlRequest.current = undefined;
 
-    // reset progress
-    progress.current = 0;
-
-    // reset the chunkCount 
-    setChunkIndex(0);
+    reset();
   };
 
   const handleResume = (event) => {
     event.preventDefault();
     setIsPaused(false);
-    handleUpload();
+    handleUpload(chunkIndex);
   };
 
   return (
