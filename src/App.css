@@ -11,3 +11,17 @@
 .input {
   padding: 10px;
 }
+
+.progress-container {
+  justify-content: center;
+  align-items: center;
+  margin: auto;
+  width: 70%;
+  height: 20px;
+  background-color: grey;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: blue;
+}

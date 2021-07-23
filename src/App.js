@@ -165,6 +165,12 @@ function App() {
         </button>
       </form>
       <p>Progress: {calculateProgress} %</p>
+      <div className="progress-container">
+        <div
+          className="progress-bar"
+          style={{ width: `${calculateProgress}%` }}
+        ></div>
+      </div>
     </div>
   );
 }
