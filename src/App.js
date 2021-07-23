@@ -31,8 +31,8 @@ function App() {
     }
 
     const fileSize = inputRef.current.files[0].size;
-    const chunks = Math.ceil(fileSize / CHUNK_SIZE);
-    return (chunkIndex / chunks) * 100;
+    const totalChunks = Math.ceil(fileSize / CHUNK_SIZE);
+    return (chunkIndex / totalChunks) * 100;
   }, [chunkIndex]);
 
   // Create a single file chunk of uniform size
