@@ -19,13 +19,20 @@ function App() {
   // current chunk index
   const [chunkIndex, setChunkIndex] = useState(0);
 
-  // Trigger re-render the component when progress changes
-  useEffect(() => {}, [uploadProgress]);
-
   const onUploadProgress = (event) => {
     setUploadProgress(
       (uploadProgress) => uploadProgress + event.loaded / event.total
     );
+  };
+
+  const calculateProgress = () => {
+    if (!inputRef.current?.files) {
+      return 0;
+    }
+
+    const fileSize = inputRef.current.files[0].size;
+    const chunks = Math.ceil(fileSize / CHUNK_SIZE);
+    return (chunkIndex / chunks) * 100;
   };
 
   // Create a single file chunk of uniform size
@@ -81,21 +88,21 @@ function App() {
     const file = inputRef.current.files[0];
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
-    let nextChunk;
+    let nextChunk = chunkIndex;
 
-    try {
-      const response = await uploadChunk(chunkIndex);
+    while (nextChunk < totalChunks) {
+      try {
+        const response = await uploadChunk(nextChunk);
 
-      nextChunk = response.chunkIndex + 1;
-      console.log(nextChunk);
-    } catch (err) {
-      console.log(err);
+        nextChunk = response.chunkIndex + 1;
+        console.log(nextChunk);
+      } catch (err) {
+        console.log(err);
+      }
     }
 
     if (nextChunk === totalChunks) {
       console.log("COMPLETED");
-    } else {
-      handleUpload(nextChunk);
     }
   };
 
@@ -108,8 +115,9 @@ function App() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
     reset();
-    await handleUpload(chunkIndex);
+    await handleUpload(0);
   };
 
   const handlePause = (event) => {
@@ -155,7 +163,7 @@ function App() {
           Cancel
         </button>
       </form>
-      <p>Progress: {uploadProgress} %</p>
+      <p>Progress: {calculateProgress()} %</p>
     </div>
   );
 }
