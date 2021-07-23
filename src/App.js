@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 
 import "./App.css";
 import { customFetch } from "./customFetch";
@@ -27,6 +27,16 @@ function App() {
       (uploadProgress) => uploadProgress + event.loaded / event.total
     );
   };
+
+  const calculateProgress = useMemo(() => {
+    if (!inputRef.current?.files) {
+      return 0;
+    }
+
+    const fileSize = inputRef.current.files[0].size;
+    const chunks = Math.ceil(fileSize / CHUNK_SIZE);
+    return (chunkIndex / chunks) * 100;
+  }, [chunkIndex]);
 
   // Create a single file chunk of uniform size
   const createFileChunk = (file, chunkStart, chunkEnd) => {
@@ -155,7 +165,7 @@ function App() {
           Cancel
         </button>
       </form>
-      <p>Progress: {uploadProgress} %</p>
+      <p>Progress: {calculateProgress} %</p>
     </div>
   );
 }
