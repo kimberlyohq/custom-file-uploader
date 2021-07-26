@@ -20,8 +20,13 @@ function App() {
   const [chunkIndex, setChunkIndex] = useState(0);
 
   const onUploadProgress = (event) => {
- 
-    setUploadProgress((uploadProgress) => uploadProgress + event.loaded);
+    let loaded = event.loaded;
+
+    if (event.loaded === event.total) {
+      loaded -= 188;
+    }
+
+    setUploadProgress((uploadProgress) => uploadProgress + loaded);
   };
 
   const calculateProgress = useMemo(() => {
@@ -31,8 +36,10 @@ function App() {
 
     const fileSize = inputRef.current.files[0].size;
 
+    console.log(uploadProgress);
+    console.log(fileSize);
 
-    return ((uploadProgress / fileSize) * 100).toFixed(1);
+    return ((uploadProgress / fileSize) * 100);
   }, [uploadProgress]);
 
   // Create a single file chunk of uniform size
@@ -43,16 +50,16 @@ function App() {
 
   // Create a custom request
   const createCustomRequest = (blob: Blob, chunkStart, chunkEnd, fileSize) => {
+    const formData = new FormData();
+    formData.append("", blob);
 
     const customRequest = {
       url: `${URL}/upload`,
       method: "POST",
-      body: blob,
+      body: formData,
       onUploadProgress,
       xmlRequest,
-      headers: {
-        "Content-Type": 'multipart/form-data',
-      },
+   
     };
     return customRequest;
   };
@@ -63,7 +70,7 @@ function App() {
 
     let chunkEnd;
 
-    if (chunkStart + CHUNK_SIZE < file.size) {
+    if (chunkStart + CHUNK_SIZE <= file.size) {
       chunkEnd = chunkStart + CHUNK_SIZE;
     } else {
       chunkEnd = file.size;
