@@ -20,13 +20,8 @@ function App() {
   const [chunkIndex, setChunkIndex] = useState(0);
 
   const onUploadProgress = (event) => {
-    let loaded = event.loaded;
-
-    if (event.loaded === event.total) {
-      loaded -= 188;
-    }
-
-    setUploadProgress((uploadProgress) => uploadProgress + loaded);
+ 
+    setUploadProgress((uploadProgress) => uploadProgress + event.loaded);
   };
 
   const calculateProgress = useMemo(() => {
@@ -48,17 +43,15 @@ function App() {
 
   // Create a custom request
   const createCustomRequest = (blob: Blob, chunkStart, chunkEnd, fileSize) => {
-    const formData = new FormData();
-    formData.append("", blob);
 
     const customRequest = {
       url: `${URL}/upload`,
       method: "POST",
-      body: formData,
+      body: blob,
       onUploadProgress,
       xmlRequest,
       headers: {
-        "Content-Range": `bytes ${chunkStart}-${chunkEnd}/${fileSize}`,
+        "Content-Type": 'multipart/form-data',
       },
     };
     return customRequest;
