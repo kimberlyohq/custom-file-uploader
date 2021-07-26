@@ -19,9 +19,10 @@ function App() {
   // current chunk index
   const [chunkIndex, setChunkIndex] = useState(0);
 
+  // progress for the current uploaded chunk
   const onUploadProgress = (event) => {
- 
-    setUploadProgress((uploadProgress) => uploadProgress + event.loaded);
+    // uploadProgress value should be <= CHUNK_SIZE
+    setUploadProgress((uploadProgress) => event.loaded);
   };
 
   const calculateProgress = useMemo(() => {
@@ -30,10 +31,19 @@ function App() {
     }
 
     const fileSize = inputRef.current.files[0].size;
+    const totalChunks = Math.ceil(fileSize / CHUNK_SIZE);
 
+    let progress = uploadProgress;
 
-    return ((uploadProgress / fileSize) * 100).toFixed(1);
-  }, [uploadProgress]);
+    if (chunkIndex < totalChunks) {
+      progress += chunkIndex * CHUNK_SIZE;
+    } else {
+      // the last chunk may be <the CHUNK_SIZE
+      progress += (chunkIndex - 1) * CHUNK_SIZE;
+    }
+
+    return ((progress / fileSize) * 100).toFixed(1);
+  }, [uploadProgress, chunkIndex]);
 
   // Create a single file chunk of uniform size
   const createFileChunk = (file, chunkStart, chunkEnd) => {
@@ -43,7 +53,6 @@ function App() {
 
   // Create a custom request
   const createCustomRequest = (blob: Blob, chunkStart, chunkEnd, fileSize) => {
-
     const customRequest = {
       url: `${URL}/upload`,
       method: "POST",
@@ -51,7 +60,7 @@ function App() {
       onUploadProgress,
       xmlRequest,
       headers: {
-        "Content-Type": 'multipart/form-data',
+        "Content-Type": "multipart/form-data",
       },
     };
     return customRequest;
@@ -94,7 +103,6 @@ function App() {
   const handleUpload = async (chunkIndex) => {
     const file = inputRef.current.files[0];
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
-    console.log(file.size);
 
     let nextChunk = chunkIndex;
 
@@ -103,7 +111,6 @@ function App() {
         const response = await uploadChunk(nextChunk);
 
         nextChunk = response.chunkIndex + 1;
-        console.log(nextChunk);
       } catch (err) {
         console.log(err);
       }
