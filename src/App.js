@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 
 import "./App.css";
 import { customFetch } from "./customFetch";
@@ -18,6 +18,8 @@ function App() {
 
   // current chunk index
   const [chunkIndex, setChunkIndex] = useState(0);
+
+  useEffect(() => {}, [isPaused]);
 
   // progress for the current uploaded chunk
   const onUploadProgress = (event) => {
@@ -92,31 +94,26 @@ function App() {
     return new Promise((resolve, reject) => {
       customFetch(customRequest)
         .then((response) => {
-          // Success --> update the chunk index
-          setChunkIndex((chunkIndex) => chunkIndex + 1);
           resolve({ chunkIndex });
         })
         .catch((err) => reject(err));
     });
   };
 
-  const handleUpload = async (chunkIndex) => {
+  const handleUpload = async () => {
     const file = inputRef.current.files[0];
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
-    let nextChunk = chunkIndex;
-
-    while (nextChunk < totalChunks) {
+    for (let i = chunkIndex; i < totalChunks; i++) {
       try {
-        const response = await uploadChunk(nextChunk);
-
-        nextChunk = response.chunkIndex + 1;
+        await uploadChunk(i);
+        setChunkIndex((chunkIndex) => chunkIndex + 1);
       } catch (err) {
         console.log(err);
       }
     }
 
-    if (nextChunk === totalChunks) {
+    if (chunkIndex === totalChunks) {
       console.log("COMPLETED");
     }
   };
@@ -131,7 +128,7 @@ function App() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     reset();
-    await handleUpload(chunkIndex);
+    await handleUpload();
   };
 
   const handlePause = (event) => {
@@ -154,7 +151,7 @@ function App() {
   const handleResume = (event) => {
     event.preventDefault();
     setIsPaused(false);
-    handleUpload(chunkIndex);
+    handleUpload();
   };
 
   return (
