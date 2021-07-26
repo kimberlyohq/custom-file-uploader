@@ -31,7 +31,7 @@ function App() {
 
     const fileSize = inputRef.current.files[0].size;
 
-    return (uploadProgress / fileSize) * 100;
+    return ((uploadProgress / fileSize) * 100).toFixed(1);
   }, [uploadProgress]);
 
   // Create a single file chunk of uniform size
@@ -44,7 +44,7 @@ function App() {
   // Create a custom request
   const createCustomRequest = (blob: Blob, chunkStart, chunkEnd, fileSize) => {
     const formData = new FormData();
-    formData.append(`Blob ${Math.random()}`, blob);
+    formData.append(``, blob);
 
     const customRequest = {
       url: `${URL}/upload`,
