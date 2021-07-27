@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 
 import "./App.css";
 import { customFetch } from "./customFetch";
@@ -26,7 +26,7 @@ function App() {
 
     // uploadProgress value should be <= CHUNK_SIZE
     if (event.lengthComputable) {
-      setUploadProgress((prevUploadProgress) => prevUploadProgress + loaded);
+      setUploadProgress((prevUploadProgress) => loaded);
     }
   };
 
@@ -114,6 +114,9 @@ function App() {
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
     for (let i = chunkIndex; i < totalChunks; i++) {
+      if (isPaused) {
+        break;
+      }
       try {
         await uploadChunk(i);
         setChunkIndex(i);
@@ -156,7 +159,7 @@ function App() {
     reset();
   };
 
-  const handleResume = (event) => {
+  const handleResume = async (event) => {
     event.preventDefault();
     setIsPaused(false);
     handleUpload();
