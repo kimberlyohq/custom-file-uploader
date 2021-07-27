@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef, useMemo } from "react";
 
 import "./App.css";
 import { customFetch } from "./customFetch";
@@ -19,12 +19,15 @@ function App() {
   // current chunk index
   const [chunkIndex, setChunkIndex] = useState(0);
 
-  useEffect(() => {}, [isPaused]);
-
   // progress for the current uploaded chunk
   const onUploadProgress = (event) => {
+    // Note: cannot reference event directly in setState update function
+    let loaded = event.loaded;
+
     // uploadProgress value should be <= CHUNK_SIZE
-    setUploadProgress((uploadProgress) => event.loaded);
+    if (event.lengthComputable) {
+      setUploadProgress((prevUploadProgress) => prevUploadProgress + loaded);
+    }
   };
 
   const calculateProgress = useMemo(() => {
@@ -102,17 +105,17 @@ function App() {
 
   const handleUpload = async () => {
     const file = inputRef.current.files[0];
+
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
     for (let i = chunkIndex; i < totalChunks; i++) {
       try {
         await uploadChunk(i);
-        setChunkIndex((chunkIndex) => chunkIndex + 1);
+        setChunkIndex(i);
       } catch (err) {
         console.log(err);
       }
     }
-
     if (chunkIndex === totalChunks) {
       console.log("COMPLETED");
     }
