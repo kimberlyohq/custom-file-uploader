@@ -106,6 +106,11 @@ function App() {
   const handleUpload = async () => {
     const file = inputRef.current.files[0];
 
+    if (!file) {
+      alert("No file uploaded");
+      return;
+    }
+
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
     for (let i = chunkIndex; i < totalChunks; i++) {
