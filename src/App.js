@@ -136,8 +136,8 @@ function App() {
 
   const handlePause = (event) => {
     event.preventDefault();
-    setIsPaused(true, undefined);
     xmlRequest.current?.abort();
+    setIsPaused(true, undefined);
   };
 
   const handleCancel = (event) => {
