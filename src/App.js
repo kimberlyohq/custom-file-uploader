@@ -125,9 +125,6 @@ function App() {
         console.log(err);
       }
     }
-    if (chunkIndex === totalChunks) {
-      console.log("COMPLETED");
-    }
 
     setIsPaused(undefined, undefined);
   };

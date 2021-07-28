@@ -1,14 +1,14 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 
 export const usePaused = (initialState) => {
   const [isPaused, setIsPaused] = useState(initialState);
   // mutable ref to store current callback
   const callbackRef = useRef(null);
 
-  const setPaused = (state, callback) => {
+  const setPaused = useCallback((state, callback) => {
     callbackRef.current = callback;
     setIsPaused(state);
-  };
+  }, []);
 
   useEffect(() => {
     if (callbackRef.current) {
