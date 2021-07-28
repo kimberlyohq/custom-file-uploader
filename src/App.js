@@ -129,13 +129,6 @@ function App() {
     setIsPaused(undefined, undefined);
   };
 
-  const reset = () => {
-    setChunkIndex(0);
-    setUploadProgress(0);
-    setIsPaused(undefined, undefined);
-    xmlRequest.current?.abort();
-  };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
     setIsPaused(false, (paused) => handleUpload(paused, 0));
@@ -150,10 +143,11 @@ function App() {
   const handleCancel = (event) => {
     event.preventDefault();
     xmlRequest.current?.abort();
+    setChunkIndex(0);
+    setUploadProgress(0);
+    setIsPaused(undefined, undefined);
     // reset the request list
     xmlRequest.current = undefined;
-
-    reset();
   };
 
   const handleResume = (event) => {
