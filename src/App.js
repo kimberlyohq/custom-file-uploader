@@ -185,7 +185,7 @@ function App() {
           Cancel
         </button>
       </form>
-      <p>Progress: {calculateProgress} %</p>
+      <h4>Progress: {calculateProgress} %</h4>
       <div className="progress-container">
         <div
           className="progress-bar"
