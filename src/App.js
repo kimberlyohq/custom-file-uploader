@@ -141,9 +141,7 @@ function App() {
     reset();
 
     // trigger a change in state to invoke callback;
-    setIsPaused(isPaused === false ? undefined : false, (paused) =>
-      handleUpload(paused, 0)
-    );
+    setIsPaused(false, (paused) => handleUpload(paused, 0));
   };
 
   const handlePause = (event) => {
@@ -171,8 +169,18 @@ function App() {
   return (
     <div className="App">
       <form>
-        <input ref={inputRef} type="file" className="input" />
-        <button type="submit" className="button" onClick={handleSubmit}>
+        <input
+          ref={inputRef}
+          type="file"
+          className="input"
+          disabled={isPaused !== undefined}
+        />
+        <button
+          type="submit"
+          className="button"
+          onClick={handleSubmit}
+          disabled={isPaused !== undefined}
+        >
           Upload
         </button>
         {!isPaused ? (
