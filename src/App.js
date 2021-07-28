@@ -138,7 +138,6 @@ function App() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-    reset();
     setIsPaused(false, (paused) => handleUpload(paused, 0));
   };
 
