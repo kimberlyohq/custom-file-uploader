@@ -1,7 +1,8 @@
-import { useState, useRef, useMemo, useEffect } from "react";
+import { useState, useRef, useMemo } from "react";
 
 import "./App.css";
 import { customFetch } from "./customFetch";
+import { usePaused } from "./usePaused";
 
 const URL = "http://localhost:8000/files";
 const CHUNK_SIZE = 10 * 1024;
@@ -11,7 +12,7 @@ function App() {
 
   const xmlRequest = useRef();
 
-  const [isPaused, setIsPaused] = useState(false);
+  const [isPaused, setIsPaused] = usePaused(undefined);
 
   // current upload progress of chunk
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -103,7 +104,7 @@ function App() {
     });
   };
 
-  const handleUpload = async () => {
+  const handleUpload = async (isPaused, chunk = chunkIndex) => {
     const file = inputRef.current.files[0];
 
     if (!file) {
@@ -113,7 +114,7 @@ function App() {
 
     const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
 
-    for (let i = chunkIndex; i < totalChunks; i++) {
+    for (let i = chunk; i < totalChunks; i++) {
       if (isPaused) {
         break;
       }
@@ -127,30 +128,36 @@ function App() {
     if (chunkIndex === totalChunks) {
       console.log("COMPLETED");
     }
+
+    setIsPaused(undefined, undefined);
   };
 
   const reset = () => {
     setChunkIndex(0);
     setUploadProgress(0);
-    setIsPaused(false);
+    setIsPaused(undefined, undefined);
     xmlRequest.current?.abort();
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     reset();
-    await handleUpload();
+
+    // trigger a change in state to invoke callback;
+    setIsPaused(isPaused === false ? undefined : false, (paused) =>
+      handleUpload(paused, 0)
+    );
   };
 
   const handlePause = (event) => {
     event.preventDefault();
-    setIsPaused(true);
+    setIsPaused(true, undefined);
     xmlRequest.current?.abort();
   };
 
   const handleCancel = (event) => {
     event.preventDefault();
-    setIsPaused(false);
+    setIsPaused(undefined, undefined);
     xmlRequest.current?.abort();
 
     // reset the request list
@@ -159,10 +166,9 @@ function App() {
     reset();
   };
 
-  const handleResume = async (event) => {
+  const handleResume = (event) => {
     event.preventDefault();
-    setIsPaused(false);
-    handleUpload();
+    setIsPaused(false, (paused) => handleUpload(paused));
   };
 
   return (
