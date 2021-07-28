@@ -139,8 +139,6 @@ function App() {
   const handleSubmit = async (event) => {
     event.preventDefault();
     reset();
-
-    // trigger a change in state to invoke callback;
     setIsPaused(false, (paused) => handleUpload(paused, 0));
   };
 
@@ -152,9 +150,7 @@ function App() {
 
   const handleCancel = (event) => {
     event.preventDefault();
-    setIsPaused(undefined, undefined);
     xmlRequest.current?.abort();
-
     // reset the request list
     xmlRequest.current = undefined;
 
