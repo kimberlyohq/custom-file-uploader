@@ -1,11 +1,21 @@
+// @flow
+
 import { useState, useRef, useEffect, useCallback } from "react";
 
-export const usePaused = (initialState) => {
+type usePausedProps = {
+  initialState?: boolean,
+};
+
+type UsePausedReturnValue = [usePausedProps, (state: usePausedProps) => any];
+
+export const usePaused = (
+  initialState: usePausedProps
+): UsePausedReturnValue => {
   const [isPaused, setIsPaused] = useState(initialState);
   // mutable ref to store current callback
   const callbackRef = useRef(null);
 
-  const setPaused = useCallback((state, callback) => {
+  const setPaused = useCallback((state: usePausedProps, callback) => {
     callbackRef.current = callback;
     setIsPaused(state);
   }, []);
